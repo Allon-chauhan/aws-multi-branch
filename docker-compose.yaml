@@ -1,10 +1,9 @@
 version: '3.8'
 services:
-  node-react-app:
-    image: nateallon/demo-app:1.1.1-15
+  java-maven-app:
+    image: docker pull nateallon/demo-app:jma-1.0
     ports:
       - 8080:8080
-
   postgres:
     image: postgres:latest
     ports:
