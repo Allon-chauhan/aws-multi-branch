@@ -1,7 +1,7 @@
 version: '3.8'
 services:
-  java-maven-app:
-    image: docker pull nateallon/demo-app:jma-1.0
+  java-maven-appr:
+    image: nateallon/demo-app:jma-1.0
     ports:
       - 8080:8080
   postgres:
