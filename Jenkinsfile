@@ -12,11 +12,21 @@ pipeline {
     tools {
             maven 'maven-3.9.9'
         }
-    environment {
-            IMAGE_NAME = 'nateallon/demo-app:jma-1.0'
-        }
 
     stages {
+        stage("increment version") {
+            steps {
+                script {
+                    echo 'incrementing app version...'
+                        sh 'mvn build-helper:parse-version versions:set \
+                            -DnewVersion=\\\${parsedVersion.majorVersion}.\\\${parsedVersion.minorVersion}.\\\${parsedVersion.nextIncrementalVersion} \
+                            versions:commit'
+                            def matcher = readFile('pom.xml') =~ '<version>(.+)</version>'
+                            def version = matcher[0][1]
+                            env.IMAGE_NAME = "$version-$BUILD_NUMBER"
+                }
+            }
+        }
         stage("build app") {
             steps {
                 script {
@@ -25,6 +35,7 @@ pipeline {
                 }
             }
         }
+
         stage("build docker image") {
             steps {
                 script {
@@ -49,6 +60,22 @@ pipeline {
                         sh "scp -o StrictHostKeyChecking=no docker-compose.yaml ec2-user@54.80.169.215:/home/ec2-user"
                         sh "ssh -o StrictHostKeyChecking=no ec2-user@54.80.169.215 ${shellCmd}"
                     }
+                }
+            }
+        }
+        stage("commit version update") {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'github-credentials', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                            sh 'git config --global user.email "jenkins@example.com"'
+                            sh 'git config --global user.name "allonjenkins"'
+                            sh 'git status'
+                            sh 'git branch'
+                            sh 'git config --list'
+                            sh 'git remote set-url origin https://${USER}:${PASS}@github.com/Allon-chauhan/jenkins-cipipeline.git'
+                            sh 'git add .'
+                            sh 'git commit -m "ci: version bump"'
+                            sh 'git push origin HEAD:dynamical-increment'
                 }
             }
         }
